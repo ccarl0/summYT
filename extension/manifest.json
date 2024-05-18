@@ -11,7 +11,7 @@
     "content_scripts": [
         {
             "matches": [
-                "https://https://www.youtube.com/*",
+                "https://https://www.youtube.com/*"
             ],
             "run_at": "document_end",
             "js": [
@@ -19,9 +19,7 @@
             ]
         }
     ],
-    "background": {
-        "service_worker": "background.js"
-    },
+    
     "action": {
         "default_popup": "popup.html",
         "default_icon": {}
