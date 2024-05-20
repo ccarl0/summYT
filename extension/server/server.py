@@ -29,5 +29,12 @@ def download_audio():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/index', methods=['GET'])
+def index():
+    return "<html><body><h1>Hello, World!</h1></body></html>"
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80, debug=True)
+    print("Server Started!")
+    app.run(host='0.0.0.0', port=8080)
+    print("Server Stopped!")
+

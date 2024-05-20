@@ -6,8 +6,7 @@ WORKDIR /app
 
 # Install FFmpeg
 RUN apt-get update && \
-    apt-get install -y ffmpeg && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y ffmpeg
 
 # Copy the current directory contents into the container at /app
 COPY . /app
@@ -15,8 +14,8 @@ COPY . /app
 # Install any needed dependencies specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Make port 5000 available to the world outside this container
-EXPOSE 80
+# Make port 80 available to the world outside this container
+EXPOSE 8080
 
 # Define environment variable
 ENV NAME World
