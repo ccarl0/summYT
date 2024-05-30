@@ -46,7 +46,9 @@ def download():
             'api-key': '9f995a2c51db48f297c1f328ddf2bf9d'
         }
 
-        response = requests.post(url, headers=headers, files=files)
+        payload = {}
+
+        response = requests.request("POST", url, headers=headers, data=payload, files=files)
         logger.info(f"Response from server: {response.text}")
 
         # Clean up the downloaded file
