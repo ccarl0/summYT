@@ -1,15 +1,19 @@
-# app.py
 import os
 import logging
 from flask import Flask, request, jsonify
 from yt_dlp import YoutubeDL
-import requests
+import assemblyai as aai
+from transformers import pipeline
 
 app = Flask(__name__)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# AssemblyAI API key
+aai.settings.api_key = "0bb28ce27bba4ebb9775f02b965c58cd"
+transcriber = aai.Transcriber()
 
 # yt-dlp options
 YDL_OPTS = {
@@ -23,6 +27,9 @@ YDL_OPTS = {
     'ffmpeg_location': '/usr/bin/ffmpeg'  # Specify the ffmpeg location
 }
 
+# T5 summarization model
+summarizer = pipeline("summarization", model="t5-base", tokenizer="t5-base")
+
 @app.route('/download', methods=['GET'])
 def download():
     video_url = request.args.get('url')
@@ -31,35 +38,34 @@ def download():
         return jsonify({"error": "No URL provided"}), 400
 
     try:
+        # Download and convert video to MP3
         with YoutubeDL(YDL_OPTS) as ydl:
             result = ydl.extract_info(video_url, download=True)
             file_path = ydl.prepare_filename(result).replace('.webm', '.mp3').replace('.m4a', '.mp3')
         
         logger.info(f"Downloaded video and converted to MP3: {file_path}")
 
-        # Send MP3 to specified endpoint
-        url = "https://smytance.openai.azure.com/openai/deployments/smyt/audio/transcriptions?api-version=2024-02-01"
-        files = [
-            ('file', (os.path.basename(file_path), open(file_path, 'rb'), 'application/octet-stream'))
-        ]
-        headers = {
-            'api-key': '9f995a2c51db48f297c1f328ddf2bf9d'
-        }
+        # Transcribe the audio from the downloaded MP3 file
+        transcript = transcriber.transcribe(file_path)
+        transcript_text = transcript.text
 
-        payload = {}
+        logger.info(f"Transcription completed: {transcript_text}")
 
-        response = requests.request("POST", url, headers=headers, data=payload, files=files)
-        logger.info(f"Response from server: {response.text}")
+        # Use the T5 model for summarization
+        summary = summarizer(transcript_text, max_length=1000, min_length=30, do_sample=False)
 
-        # Clean up the downloaded file
-        os.remove(file_path)
-        logger.info(f"Removed file: {file_path}")
+        logger.info(f"Summary: {summary}")
 
-        return jsonify({"status": "success", "response": response.text})
+        return jsonify({"status": "success", "transcription": transcript_text, "summary": summary[0]['summary_text']})
 
     except Exception as e:
         logger.error(f"Error occurred: {e}")
         return jsonify({"error": str(e)}), 500
+    finally:
+        # Clean up the downloaded file
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            logger.info(f"Removed file: {file_path}")
 
 if __name__ == '__main__':
     if not os.path.exists('downloads'):

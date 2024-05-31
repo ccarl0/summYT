@@ -1,4 +1,4 @@
-# Dockerfile
+# Use the official Python image from the Docker Hub
 FROM python:3.9-slim
 
 # Set the working directory
@@ -8,15 +8,15 @@ WORKDIR /app
 COPY . /app
 
 # Install dependencies
-RUN apt-get update && apt-get install -y \
-    ffmpeg \
+RUN apt-get update && apt-get install -y ffmpeg \
+    && pip install --no-cache-dir -r requirements.txt \
     && rm -rf /var/lib/apt/lists/*
-
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
 
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
 
-# Run app.py when the container launches
-CMD ["python", "app.py"]
+# Define environment variable
+ENV FLASK_APP=app.py
+
+# Run the application
+CMD ["flask", "run", "--host=0.0.0.0", "--port=8080"]
