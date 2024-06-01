@@ -1,39 +1,40 @@
 {
-    "manifest_version": 3,
-    "name": "summYT",
-    "description": "Summarize any YouTube video with just one click!",
-    "version": "0.1.0",
-    "permissions": [
+  "manifest_version": 3,
+  "name": "summYT",
+  "description": "Summarize any YouTube video with just one click!",
+  "version": "0.1.0",
+  "permissions": [
       "tabs",
       "activeTab",
       "scripting"
-    ],
-    "host_permissions": ["<all_urls>"],
-    "background": {
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
       "service_worker": "background.js"
-    },
-    "content_scripts": [
+  },
+  "content_scripts": [
       {
-        "matches": [
-          "*://*.youtube.com/*"
-        ],
-        "js": [
-          "contentScript.js"
-        ],
-        "run_at": "document_idle"
+          "matches": [
+              "*://*.youtube.com/*"
+          ],
+          "js": [
+              "contentScript.js"
+          ],
+          "run_at": "document_idle"
       }
-    ],
-    "action": {
+  ],
+  "action": {
       "default_icon": {
         "16": "icon16.png",
         "48": "icon48.png",
+        "64": "icon64.png",
         "128": "icon128.png"
       }
-    },
-    "icons": {
+  },
+  "icons": {
       "16": "icon16.png",
       "48": "icon48.png",
+      "64": "icon64.png",
       "128": "icon128.png"
-    }
   }
-  
+}
