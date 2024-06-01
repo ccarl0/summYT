@@ -38,14 +38,14 @@ def download():
         logger.info(f"Downloaded video and converted to MP3: {file_path}")
 
         # Send MP3 to specified endpoint
-        url = "https://smytance.openai.azure.com/openai/deployments/smyt/audio/transcriptions?api-version=2024-02-01"
+        url = "https://smyt.openai.azure.com/openai/deployments/summyt-deploy/audio/transcriptions?api-version=2024-02-01"
         files = [
             ('file', (os.path.basename(file_path), open(file_path, 'rb'), 'application/octet-stream'))
         ]
         headers = {
-            'api-key': '9f995a2c51db48f297c1f328ddf2bf9d'
+            'api-key': 'd4d23c1f87784aa0992d6dbd1a0ccca1'
         }
-
+        
         response = requests.post(url, headers=headers, files=files)
         logger.info(f"Response from server: {response.text}")
 
