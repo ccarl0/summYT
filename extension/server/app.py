@@ -51,6 +51,8 @@ def download():
 
         logger.info(f"Transcription completed: {transcript_text}")
 
+        logger.inf0(f"Summarizing...")
+
         # Use the T5 model for summarization
         summary = summarizer(transcript_text, max_length=1000, min_length=30, do_sample=False)
 
