@@ -2,10 +2,12 @@ import os
 import logging
 from flask import Flask, request, jsonify
 from yt_dlp import YoutubeDL
-import assemblyai as aai
-from transformers import pipeline
+import requests
+from openai import AzureOpenAI
 
 app = Flask(__name__)
+
+oai_key = "13cf4b63805044468161b60b42293570"
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -38,27 +40,56 @@ def download():
         return jsonify({"error": "No URL provided"}), 400
 
     try:
-        # Download and convert video to MP3
+        # Download the video and convert it to MP3
         with YoutubeDL(YDL_OPTS) as ydl:
             result = ydl.extract_info(video_url, download=True)
             file_path = ydl.prepare_filename(result).replace('.webm', '.mp3').replace('.m4a', '.mp3')
         
         logger.info(f"Downloaded video and converted to MP3: {file_path}")
 
-        # Transcribe the audio from the downloaded MP3 file
-        transcript = transcriber.transcribe(file_path)
-        transcript_text = transcript.text
+        # Send MP3 to Whisper endpoint
+        whisper_url = "https://smyt-ncus.openai.azure.com/openai/deployments/smyt-whisper/audio/transcriptions?api-version=2024-02-01"
+        files = [
+            ('file', (os.path.basename(file_path), open(file_path, 'rb'), 'application/octet-stream'))
+        ]
+        headers = {
+            'api-key': oai_key
+        }
+        
+        response = requests.post(whisper_url, headers=headers, files=files)
+        response.raise_for_status()
 
-        logger.info(f"Transcription completed: {transcript_text}")
+        # transcription = response.text
+       
+        transcription_data = response.json()
+        transcription = transcription_data.get("text", "")
 
-        logger.inf0(f"Summarizing...")
+        logger.info(f"Transcription response: {transcription}")
+
+        
+
+        client = AzureOpenAI(
+            azure_endpoint = "https://smyt-ncus.openai.azure.com/",
+            api_key= "13cf4b63805044468161b60b42293570",
+            api_version="2024-02-01"
+        )
+
+        summary_response = client.chat.completions.create(
+            model="smyt-35t16k",
+            messages=[
+                {"role": "system", "content": "You are a useful YT videos text summarizer."},
+                {"role": "user", "content": f"Summarize the following text: {transcription}"}
+            ]
+        )
+
+        logger.info(summary_response.choices[0].message.content)
 
         # Use the T5 model for summarization
         summary = summarizer(transcript_text, max_length=1000, min_length=30, do_sample=False)
 
         logger.info(f"Summary: {summary}")
 
-        return jsonify({"status": "success", "transcription": transcript_text, "summary": summary[0]['summary_text']})
+        return jsonify({"status": "success", "transcription": transcription, "summary": summary_response.choices[0].message.content})
 
     except Exception as e:
         logger.error(f"Error occurred: {e}")

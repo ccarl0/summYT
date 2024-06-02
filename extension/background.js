@@ -37,7 +37,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         log('info', `Fetching summary for URL: ${videoUrl}`);
 
         // Call your Flask server to get the video summary
-        fetch(`https://summyt-server-xenbzpbrlq-oc.a.run.app/download?url=${encodeURIComponent(videoUrl)}`)
+        fetch(`https://smyt-oai-5wd6clijxa-og.a.run.app/download?url=${encodeURIComponent(videoUrl)}`)
             .then(response => {
                 if (!response.ok) throw new Error('Network response was not ok.');
                 return response.json();
