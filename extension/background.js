@@ -27,7 +27,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log(`Fetching audio for URL: ${videoUrl}`);
 
         // Call your Flask server to get the audio data
-        fetch(`https://summytservice-3vj7v3emia-lm.a.run.app/download?url=${encodeURIComponent(videoUrl)}`)
+        fetch(`https://smyt-oai-5wd6clijxa-og.a.run.app/download?url=${encodeURIComponent(videoUrl)}`)
             .then(response => {
                 if (!response.ok) throw new Error('Network response was not ok.');
                 return response.blob();
