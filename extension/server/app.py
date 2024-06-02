@@ -13,10 +13,6 @@ oai_key = "13cf4b63805044468161b60b42293570"
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# AssemblyAI API key
-aai.settings.api_key = "0bb28ce27bba4ebb9775f02b965c58cd"
-transcriber = aai.Transcriber()
-
 # yt-dlp options
 YDL_OPTS = {
     'format': 'bestaudio/best',
@@ -28,9 +24,6 @@ YDL_OPTS = {
     'outtmpl': 'downloads/%(id)s.%(ext)s',
     'ffmpeg_location': '/usr/bin/ffmpeg'  # Specify the ffmpeg location
 }
-
-# T5 summarization model
-summarizer = pipeline("summarization", model="t5-base", tokenizer="t5-base")
 
 @app.route('/download', methods=['GET'])
 def download():
@@ -84,21 +77,15 @@ def download():
 
         logger.info(summary_response.choices[0].message.content)
 
-        # Use the T5 model for summarization
-        summary = summarizer(transcript_text, max_length=1000, min_length=30, do_sample=False)
-
-        logger.info(f"Summary: {summary}")
+        # Clean up the downloaded file
+        os.remove(file_path)
+        logger.info(f"Removed file: {file_path}")
 
         return jsonify({"status": "success", "transcription": transcription, "summary": summary_response.choices[0].message.content})
 
     except Exception as e:
         logger.error(f"Error occurred: {e}")
         return jsonify({"error": str(e)}), 500
-    finally:
-        # Clean up the downloaded file
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            logger.info(f"Removed file: {file_path}")
 
 if __name__ == '__main__':
     if not os.path.exists('downloads'):
