@@ -1,10 +1,20 @@
+// Logging function for debugging
+function log(level, message, data = null) {
+    const logMessage = `[summYT][${level}] ${message}`;
+    if (data) {
+        console[level](logMessage, data);
+    } else {
+        console[level](logMessage);
+    }
+}
+
 // Function to inject buttons into visible video thumbnails
 function injectButtons() {
     // Select visible thumbnail elements on the screen
     const thumbnails = document.querySelectorAll('ytd-rich-item-renderer, ytd-compact-video-renderer');
 
     if (thumbnails.length === 0) {
-        console.log("No visible thumbnails found.");
+        log('info', "No visible thumbnails found.");
         return;
     }
 
@@ -23,15 +33,42 @@ function injectButtons() {
             // Get the URL of the video
             const videoUrl = thumbnail.querySelector('a#thumbnail').href;
 
-            // Send a message to the background script to fetch audio data
-            chrome.runtime.sendMessage({ type: 'fetch_audio', videoUrl }, response => {
-                if (response && response.audioData) {
-                    const audioData = response.audioData;
-                    console.log('Audio data received:', audioData);
-                    // You can now use this audio data for further processing
+            // Create a popup with a loader
+            const popup = document.createElement('div');
+            popup.classList.add('summYT-popup');
+            popup.style.position = 'fixed';
+            popup.style.top = '50%';
+            popup.style.left = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            popup.style.backgroundColor = 'white';
+            popup.style.border = '1px solid #ccc';
+            popup.style.padding = '20px';
+            popup.style.zIndex = '10000';
+            popup.style.fontSize = '16px'; // Make the text larger
+            popup.innerHTML = '<div>Loading summary...</div>';
+
+            document.body.appendChild(popup);
+
+            log('info', `Fetching summary for video URL: ${videoUrl}`);
+            
+            // Send a message to the background script to fetch the video summary
+            chrome.runtime.sendMessage({ type: 'fetch_summary', videoUrl }, response => {
+                if (response && response.summary) {
+                    popup.innerHTML = `<div>${response.summary}</div>`;
+                    log('info', `Summary received for video URL: ${videoUrl}`);
                 } else {
-                    console.error('Failed to retrieve audio data:', response.error);
+                    popup.innerHTML = `<div>Error: ${response.error}</div>`;
+                    log('error', `Failed to retrieve summary for video URL: ${videoUrl}`, response.error);
                 }
+
+                // Add a close button to the popup
+                const closeButton = document.createElement('button');
+                closeButton.textContent = 'Close';
+                closeButton.style.marginTop = '10px';
+                closeButton.addEventListener('click', () => {
+                    document.body.removeChild(popup);
+                });
+                popup.appendChild(closeButton);
             });
         });
 
@@ -67,7 +104,7 @@ if (typeof observer === 'undefined') {
         subtree: true
     });
 
-    console.log("Content script loaded and observer set.");
+    log('info', "Content script loaded and observer set.");
 } else {
-    console.log("Observer is already defined.");
+    log('info', "Observer is already defined.");
 }
