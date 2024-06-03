@@ -27,48 +27,52 @@ function injectButtons() {
         button.textContent = 'summYT';
         button.classList.add('summYT-button');
         button.style.cursor = 'pointer';
+        button.style.marginRight = '8px'; // Add some margin to the right of the button
+        button.style.backgroundColor = '#cc0000'; // YouTube's button color
+        button.style.color = 'white';
+        button.style.border = 'none';
+        button.style.borderRadius = '2px';
+        button.style.padding = '10px 16px';
+        button.style.fontSize = '14px';
+        button.style.fontWeight = '500';
+        button.style.textTransform = 'uppercase';
 
         // Add click event listener to the button
         button.addEventListener('click', () => {
             // Get the URL of the video
             const videoUrl = thumbnail.querySelector('a#thumbnail').href;
 
-            // Create a popup with a loader
-            const popup = document.createElement('div');
-            popup.classList.add('summYT-popup');
-            popup.style.position = 'fixed';
-            popup.style.top = '50%';
-            popup.style.left = '50%';
-            popup.style.transform = 'translate(-50%, -50%)';
-            popup.style.backgroundColor = 'white';
-            popup.style.border = '1px solid #ccc';
-            popup.style.padding = '20px';
-            popup.style.zIndex = '10000';
-            popup.style.fontSize = '16px'; // Make the text larger
-            popup.innerHTML = '<div>Loading summary...</div>';
+            // Find or create a container for the summary
+            let summaryContainer = thumbnail.querySelector('.summYT-summary');
+            if (!summaryContainer) {
+                summaryContainer = document.createElement('p');
+                summaryContainer.classList.add('summYT-summary');
+                summaryContainer.style.marginTop = '10px';
+                summaryContainer.style.padding = '10px';
+                summaryContainer.style.backgroundColor = '#f9f9f9';
+                summaryContainer.style.border = '1px solid #ccc';
+                summaryContainer.style.borderRadius = '4px';
+                summaryContainer.style.fontSize = '14px'; // Similar to YouTube's font size
+                summaryContainer.style.color = '#333';
 
-            document.body.appendChild(popup);
+                // Insert the summary container after the button
+                button.after(summaryContainer);
+            }
+
+            // Show a loading message
+            summaryContainer.textContent = 'Loading summary...';
 
             log('info', `Fetching summary for video URL: ${videoUrl}`);
             
             // Send a message to the background script to fetch the video summary
             chrome.runtime.sendMessage({ type: 'fetch_summary', videoUrl }, response => {
                 if (response && response.summary) {
-                    popup.innerHTML = `<div>${response.summary}</div>`;
+                    summaryContainer.textContent = response.summary;
                     log('info', `Summary received for video URL: ${videoUrl}`);
                 } else {
-                    popup.innerHTML = `<div>Error: ${response.error}</div>`;
+                    summaryContainer.textContent = `Error: ${response.error}`;
                     log('error', `Failed to retrieve summary for video URL: ${videoUrl}`, response.error);
                 }
-
-                // Add a close button to the popup
-                const closeButton = document.createElement('button');
-                closeButton.textContent = 'Close';
-                closeButton.style.marginTop = '10px';
-                closeButton.addEventListener('click', () => {
-                    document.body.removeChild(popup);
-                });
-                popup.appendChild(closeButton);
             });
         });
 
@@ -79,6 +83,8 @@ function injectButtons() {
             // Create a div to contain the button
             const buttonContainer = document.createElement('div');
             buttonContainer.style.marginTop = '5px'; // Adjust margin as needed
+            buttonContainer.style.display = 'flex';
+            buttonContainer.style.alignItems = 'center';
 
             // Append the button to the container
             buttonContainer.appendChild(button);
